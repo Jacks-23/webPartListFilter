@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "wp-list-filter-client-side-solution",
+    "id": "c89991cc-8c7e-4af0-861e-e1284d4ee462",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.14.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "wpListFilter description"
+      },
+      "longDescription": {
+        "default": "wpListFilter description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "wp-list-filter Feature",
+        "description": "The feature that activates elements of the wp-list-filter solution.",
+        "id": "6b968709-900c-4d65-b82b-c78602834a71",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/wp-list-filter.sppkg"
+  }
+}

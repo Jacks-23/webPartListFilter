@@ -1,0 +1,16 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "version": "1.14.0",
+    "libraryName": "wp-list-filter",
+    "libraryId": "c89991cc-8c7e-4af0-861e-e1284d4ee462",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "wpListFilter",
+    "solutionShortDescription": "wpListFilter description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
