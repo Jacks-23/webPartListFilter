@@ -3,9 +3,10 @@ import * as React from "react";
 import { cardsState } from "./cardsState";
 import { cardsProps } from "./cardsProps";
 
-import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from "@microsoft/sp-http";
-import { iteratee } from "lodash";
-import { DocumentCard, DocumentCardDetails, DocumentCardTitle } from "office-ui-fabric-react/lib/DocumentCard";
+
+import { SPHttpClient } from "@microsoft/sp-http";
+import { templateSettings } from "lodash";
+import Card from "./card";
 
     
 
@@ -14,66 +15,59 @@ export class Cards extends React.Component<cardsProps, cardsState> {
         super(props);
         this.state = {
             items: [],
-            docs:[],
             ready: false,
         };
+
     }
 
-    
-    public getItems() {
-        const url = "/_api/Web/Lists/getbytitle('Projects')/Items?$select=Title,Id";
-        this.props.context.spHttpClient
-            .get(
-                `${this.props.context.pageContext.web.absoluteUrl}${url}`,
-                SPHttpClient.configurations.v1
-            )
-            .then(
-                (response: SPHttpClientResponse): Promise<{ value: any[] }> => {
-                    return response.json();
-                }
-            )
-            .then((response: { value: any[] }) => {
-                let _items = [];
-                _items = _items.concat(response.value);
-                this.setState({
-                    items: _items,
-                    ready: false
-                });
+
+    public async componentDidMount() {
+        const urlProjects = "/_api/Web/Lists/getbytitle('Projects')/Items?$select=Title,Id";
+        const responseProjects = await this.props.context.spHttpClient.get(`${this.props.context.pageContext.web.absoluteUrl}${urlProjects}`,
+        SPHttpClient.configurations.v1);
+        const dataProjects = await responseProjects.json();
+        let projectData = dataProjects.value.map(u => [u.Id, u.Title]);
+
+        const urlDocs = "/_api/Web/Lists/getbytitle('Project Documents')/Items?$select=Title,ProjectId";
+        const responseDocs = await this.props.context.spHttpClient.get(`${this.props.context.pageContext.web.absoluteUrl}${urlDocs}`,
+        SPHttpClient.configurations.v1);
+        const dataDocs = await responseDocs.json();
+        let docsData = dataDocs.value.map(u => [u.ProjectId, u.Title]);
+
+        let arrSet = [];
+
+        const filtreDocsId = (index, arrayInit, arrayFinal) => {
+            arrayInit.forEach( e => {
+                if(e[0] != index) return;
+                
+                arrayFinal.push(e[1]);
             });
-           
             
-    }
-    
-    public getDocuments() {
-        this.props.context.spHttpClient
-            .get(
-                `${this.props.context.pageContext.web.absoluteUrl}/_api/Web/Lists/getbytitle('Project Documents')/Items?$select=Title,ProjectId`,
-                SPHttpClient.configurations.v1
-            )
-            .then(
-                (response2: SPHttpClientResponse): Promise<{ value: any[] }> => {
-                    return response2.json();
-                }
-            )
-            .then((response2: { value: any[] }) => {
-                let _documents = [];
-                _documents = _documents.concat(response2.value);
-                 let newItems = this.state.items.map(item => {
-                    return {...item, documents : _documents.filter(document => document.ProjectId === item.Id)
-                    }
-                })
-                console.log(newItems)
-                this.setState({
-                    docs:_documents,
-                    items : newItems,
-                    ready: true
-                });
-            });
-    }
+            return arrayFinal;
+        };
 
-    public componentDidMount(): void {
-        this.getItems();
-        this.getDocuments();
+        for (let i = 0; i < projectData.length; i++) {
+            let arrDocs=[];
+            arrDocs = filtreDocsId(i+1,docsData, arrDocs );
+            let objectProject = {
+                Id: projectData[i][0],
+                Title: projectData[i][1],
+                Docs: arrDocs
+            };
+            arrSet.push(objectProject);
+        }
+
+        console.log(projectData);
+
+        console.log(docsData);
+
+        console.log(arrSet);
+
+        this.setState({
+            items: arrSet,
+            ready: true,
+            
+        });      
         
     }
 
@@ -81,24 +75,15 @@ export class Cards extends React.Component<cardsProps, cardsState> {
     
     public render(): React.ReactElement<cardsProps> {
 
-        const {ready, items, docs} = this.state;
+        const {ready, items} = this.state;
+
         return (
             <div className="container">
-                { ready ? (
-                    <>
-                    {items.map((item, key) =>
-                        <div className="container">
-                            {item.Title}
-                            {item.documents.map((a) => <p> {a.Title} </p>)}
-                        </div>
-                    )}
-                    </>
-                ) : <></>}
-
+                <Card state={items} />
             </div>
+            
+            
         );
-        
     }
-
     
 }
