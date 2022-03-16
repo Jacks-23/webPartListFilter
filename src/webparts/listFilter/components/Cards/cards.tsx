@@ -1,89 +1,73 @@
 import * as React from "react";
-
-import { cardsState } from "./cardsState";
-import { cardsProps } from "./cardsProps";
-
-
-import { SPHttpClient } from "@microsoft/sp-http";
-import { templateSettings } from "lodash";
 import Card from "./card";
+import { useState } from "react";
+import { useEffect } from "react";
+import {fetchProjects, fetchDocuments} from '../../actions/items';
+import useAppContext from "../../context/appContext";
+import {Icon} from '@fluentui/react/lib/Icon'
 
-    
+const Cards = () =>  {
+    const [items, setItems] = useState([]);
+    const [ready, setIsReady] = useState(false);
+    const [search, setSearch] = useState('');
+    const {context} = useAppContext();
+    useEffect(() => {
+        fetchProjects(context).then((response) => {
+            const projects = response.value;
+            fetchDocuments(context).then((response) =>  {
+                const documents = response.value;
 
-export class Cards extends React.Component<cardsProps, cardsState> {
-    constructor(props: cardsProps, state: cardsState) {
-        super(props);
-        this.state = {
-            items: [],
-            ready: false,
-        };
-
-    }
-
-
-    public async componentDidMount() {
-        const urlProjects = "/_api/Web/Lists/getbytitle('Projects')/Items?$select=Title,Id";
-        const responseProjects = await this.props.context.spHttpClient.get(`${this.props.context.pageContext.web.absoluteUrl}${urlProjects}`,
-        SPHttpClient.configurations.v1);
-        const dataProjects = await responseProjects.json();
-        let projectData = dataProjects.value.map(u => [u.Id, u.Title]);
-
-        const urlDocs = "/_api/Web/Lists/getbytitle('Project Documents')/Items?$select=Title,ProjectId";
-        const responseDocs = await this.props.context.spHttpClient.get(`${this.props.context.pageContext.web.absoluteUrl}${urlDocs}`,
-        SPHttpClient.configurations.v1);
-        const dataDocs = await responseDocs.json();
-        let docsData = dataDocs.value.map(u => [u.ProjectId, u.Title]);
-
-        let arrSet = [];
-
-        const filtreDocsId = (index, arrayInit, arrayFinal) => {
-            arrayInit.forEach( e => {
-                if(e[0] != index) return;
-                
-                arrayFinal.push(e[1]);
+            setItems(projects.map(project => {
+                return {
+                    Id: project.Id,
+                    Title: project.Title,
+                    Docs: documents.filter(document => document.ProjectId=== project.Id)
+                };
+            }));
             });
-            
-            return arrayFinal;
-        };
+        });
+    }, []);
 
-        for (let i = 0; i < projectData.length; i++) {
-            let arrDocs=[];
-            arrDocs = filtreDocsId(i+1,docsData, arrDocs );
-            let objectProject = {
-                Id: projectData[i][0],
-                Title: projectData[i][1],
-                Docs: arrDocs
-            };
-            arrSet.push(objectProject);
+    useEffect(() => {
+        if(!(ready === true) && items.length > 0 ) {
+            console.log('set ready to true');
+            console.log(items);
+            setIsReady(true);
         }
-
-        console.log(projectData);
-
-        console.log(docsData);
-
-        console.log(arrSet);
-
-        this.setState({
-            items: arrSet,
-            ready: true,
-            
-        });      
-        
-    }
-
+    }, [items]);
+    const filtered = search.length === 0 ? items :
+    items.filter(item => item.Title.toLowerCase().startsWith(search.toLowerCase()));
+    const searchIcon = () => <Icon iconName="Search"></Icon>
 
     
-    public render(): React.ReactElement<cardsProps> {
 
-        const {ready, items} = this.state;
+    return (
+        <>
+            {ready ? (
+                <>
+                    <div className="flex justify-center mb-3 border-double border-4 border-indigo-600">
+                            <input className="filterBar" value={search} onChange={(e)=> setSearch(e.target.value)} placeholder="filter"/>
+                            <Icon iconName="Search"></Icon>
+                    </div>
+                    <div className="flex flex-wrap -mx-1 lg:-mx-4">
+                        {filtered.length > 0 ? filtered.map((item,index) => (
+                            <>
+                                <Card item={item} key={index} />
+                            </>
+                        ))
+                        :
+                            <div className="container">
+                                <h1>No results found</h1>
+                            </div>
+                        }
+                    </div>
+                </>
+            ) : (
+                <span>Loading</span>
+            )
+        }
+        </>
+    );    
+};
 
-        return (
-            <div className="container">
-                <Card state={items} />
-            </div>
-            
-            
-        );
-    }
-    
-}
+export default Cards;

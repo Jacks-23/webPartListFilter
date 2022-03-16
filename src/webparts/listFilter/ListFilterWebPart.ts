@@ -8,6 +8,9 @@ import { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'ListFilterWebPartStrings';
 import ListFilter from './components/ListFilter';
 import { IListFilterProps } from './components/IListFilterProps';
+
+import { initializeIcons } from '@fluentui/font-icons-mdl2';
+initializeIcons();
 import './../../tailwind.css';
 
 export interface IListFilterWebPartProps {
